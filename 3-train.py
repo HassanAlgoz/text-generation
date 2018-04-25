@@ -4,11 +4,12 @@ from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
 from keras.utils import to_categorical
 from keras.models import Sequential
-from keras.layers import Dense
-from keras.layers import LSTM
-from keras.layers import GRU
-from keras.layers import Embedding
-from keras.callbacks import LambdaCallback
+from keras import layers
+from keras import callbacks
+import warnings
+warnings.filterwarnings(action='ignore', category=UserWarning, module='gensim')
+import gensim
+import os
 
 # load sequences
 with open('./processed/sequences.txt', encoding='utf-8') as f:
@@ -16,42 +17,56 @@ with open('./processed/sequences.txt', encoding='utf-8') as f:
 
 # Load tokenizer and convert word sequences to their integers
 tokenizer = pickle.load(open('./results/tokenizer.pkl', 'rb'))
-sequences = np.asarray(tokenizer.texts_to_sequences(texts))
+sequences = np.array(tokenizer.texts_to_sequences(texts))
 vocab_size = len(tokenizer.word_index) + 1
-del tokenizer
 print(sequences[:5])
-
+word_index = tokenizer.word_index
+del tokenizer
 
 # Embeddings
-embeddings = pickle.load(open('./results/embeddings.pkl', 'rb'))
-embedding_dim = embeddings.shape[1]
-print('embeddings shape: {}'.format(embeddings.shape))
+word2vec = gensim.models.Word2Vec.load('./results/gensim.model')
+word_vectors = word2vec.wv
+vector_size = word_vectors.vector_size
+del word2vec
+
+# https://www.kaggle.com/lystdo/lstm-with-word2vec-embeddings
+embedding_matrix = np.zeros((vocab_size, word_vectors.vector_size))
+for word, i in word_index.items():
+    if word in word_vectors.vocab:
+        embedding_matrix[i] = np.transpose(word_vectors.word_vec(word))
+print('Null word embeddings: %d' % np.sum(np.sum(embedding_matrix, axis=1) == 0))
+del word_vectors
 
 # separate into input and output
+print('separate into input and output...')
 X, y = sequences[:, :-1], sequences[:, -1]
+del sequences
 y = to_categorical(y, num_classes=vocab_size)
 seq_length = X.shape[1]
 
 # Define model
+# Input to Embedding is integers, used to select the embedding vector corresponding to the word at that index.
+batch_size = 10
 model = Sequential([
-    # Input to Embedding is integers, used to select the embedding vector corresponding to the word at that index.
-    Embedding(vocab_size, embedding_dim, weights=[embeddings], input_length=seq_length, trainable=False),
-    GRU(100, return_sequences=True),
-    GRU(100),
-    Dense(100, activation='relu'),
-    Dense(vocab_size, activation='softmax'),
+    layers.Embedding(
+        input_dim=vocab_size,
+        output_dim=vector_size,
+        input_length=seq_length,
+        trainable=False,
+        weights=[embedding_matrix]
+    ),
+    layers.GRU(vector_size),
+    layers.Dense(vocab_size, activation='softmax'),
 ])
 model.summary()
 # compile model
-model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+model.compile(loss='categorical_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
 
-# callback
-def on_epoch_end(epoch, logs):
-    # save the model to a file
-    model.save('./results/model.h5')
-
-callbacks = LambdaCallback(on_epoch_end=on_epoch_end)
+# save model after each epoch
+checkpoint_cb = callbacks.ModelCheckpoint('./results/model.h5')
+# if the value monitored doesn't improve in 10 epochs, stop training.
+earlystop_cb = callbacks.EarlyStopping(monitor='val_loss', patience=10, mode='min')
 
 # fit model
-model.fit(X, y, batch_size=10, epochs=100, callbacks=[callbacks])
+model.fit(X, y, batch_size=batch_size, epochs=100)
 

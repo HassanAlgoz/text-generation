@@ -16,7 +16,7 @@ with open('./processed/sequences.txt', encoding='utf-8') as f:
 	texts = f.read().split('\n')
 
 # Load tokenizer and convert word sequences to their integers
-tokenizer = pickle.load(open('./results/tokenizer.pkl', 'rb'))
+tokenizer = pickle.load(open('./processed/tokenizer.pkl', 'rb'))
 sequences = np.array(tokenizer.texts_to_sequences(texts))
 vocab_size = len(tokenizer.word_index) + 1
 print(sequences[:5])
@@ -45,8 +45,6 @@ y = to_categorical(y, num_classes=vocab_size)
 seq_length = X.shape[1]
 
 # Define model
-# Input to Embedding is integers, used to select the embedding vector corresponding to the word at that index.
-batch_size = 10
 model = Sequential([
     layers.Embedding(
         input_dim=vocab_size,
@@ -65,8 +63,8 @@ model.compile(loss='categorical_crossentropy', optimizer='rmsprop', metrics=['ac
 # save model after each epoch
 checkpoint_cb = callbacks.ModelCheckpoint('./results/model.h5')
 # if the value monitored doesn't improve in 10 epochs, stop training.
-earlystop_cb = callbacks.EarlyStopping(monitor='val_loss', patience=10, mode='min')
+earlystop_cb = callbacks.EarlyStopping(monitor='loss', patience=10, mode='min')
 
 # fit model
-model.fit(X, y, batch_size=batch_size, epochs=100)
+model.fit(X, y, batch_size=100, epochs=5, verbose=2, callbacks=[checkpoint_cb, earlystop_cb])
 

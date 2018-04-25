@@ -22,13 +22,13 @@ startTime = time.time()
 
 # Count the most common 10,000 tokens
 counter = collections.Counter()
-clean_text = ''
+filtered_text = ''
 with open('./raw-data/text.txt', mode='r', encoding='utf-8') as f:
     line = f.readline()
     while line:
         tokens = filter_text(line).replace('\n', ' ').split()
         tokens = [t for t in tokens if t.strip() != '']
-        clean_text += ' '.join(tokens)
+        filtered_text += ' '.join(tokens)
         counter.update(tokens)
         line = f.readline()
 
@@ -36,14 +36,17 @@ with open('./raw-data/text.txt', mode='r', encoding='utf-8') as f:
 most_common = list()
 for word, count in counter.most_common(10000):
     most_common.append(word)
-
+print("most common:", len(most_common))
 del counter
-clean_tokens = [t for t in clean_text.split() if t in most_common]
+
+with open('./processed/most_common_{}.txt'.format(len(most_common)), mode="w", encoding='utf-8') as f:
+    f.write('\n'.join(most_common))
+
+clean_text = ' '.join([t for t in filtered_text.split() if t in most_common])
 
 # Write them to clean_text.txt
 with open('./processed/clean_text.txt', mode='w', encoding='utf-8') as f:   
-    for token in clean_tokens:
-        f.write(token + ' ')
+    f.write(clean_text)
 
 # Display elapsed time
 endTime = time.time()

@@ -3,6 +3,7 @@ warnings.filterwarnings(action='ignore', category=UserWarning, module='gensim')
 from gensim.models import Word2Vec, Phrases
 import os
 import helper.paths as PATH
+import helper.args as args
 
 class SentenceGenerator(object):
     def __init__(self, filepath):
@@ -19,7 +20,7 @@ sentences = SentenceGenerator(PATH.CLEAN_TEXT) # a memory-friendly iterator
 # phrases longer than one word. Using phrases, you can learn a word2vec model where “words”
 #  are actually multiword expressions, such as new_york_times or financial_crisis:
 bigram_transformer = Phrases(sentences)
-model = Word2Vec(bigram_transformer[sentences], size=100, window=5, max_vocab_size=10000,  min_count=5, workers=4)
+model = Word2Vec(bigram_transformer[sentences], size=args.EMBEDDING_HIDDEN_SIZE, window=args.EMBEDDING_WINDOW_SIZE, max_vocab_size=args.MAX_VOCAB_SIZE,  min_count=5, workers=4)
 
 # Save the model
 model.save(PATH.GENSIM_MODEL)

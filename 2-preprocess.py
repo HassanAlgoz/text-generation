@@ -3,6 +3,7 @@ import string
 from keras.preprocessing.text import Tokenizer
 import pickle
 import helper.paths as PATH
+import helper.args as args
  
 # load text
 with open(PATH.CLEAN_TEXT, encoding='utf-8') as f:
@@ -10,6 +11,7 @@ with open(PATH.CLEAN_TEXT, encoding='utf-8') as f:
 print(text[:200])
 
 tokens = text.split()
+del text
 print(tokens[:200])
 print('Total Tokens: %d' % len(tokens))
 print('Unique Tokens: %d' % len(set(tokens)))
@@ -22,7 +24,7 @@ pickle.dump(tokenizer, open(PATH.TOKENIZER, 'wb'))
 del tokenizer
  
 # organize into sequences of tokens
-length = 15 + 1
+length = args.SEQUENCE_LENGTH + 1
 sequences = list()
 for i in range(length, len(tokens)):
 	# select sequence of tokens

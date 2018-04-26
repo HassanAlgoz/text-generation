@@ -12,6 +12,7 @@ warnings.filterwarnings(action='ignore', category=UserWarning, module='gensim')
 import gensim
 import os
 import helper.paths as PATH
+import helper.args as args
 
 # load sequences
 with open(PATH.SEQUENCES, encoding='utf-8') as f:
@@ -65,7 +66,7 @@ else:
         layers.Dense(vocab_size, activation='softmax'),
     ])
     # compile model
-    model.compile(loss='categorical_crossentropy', optimizer='adagrad', metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy', optimizer=args.OPTIMIZER, metrics=['accuracy'])
 
 model.summary()
 
@@ -75,5 +76,5 @@ checkpoint_cb = callbacks.ModelCheckpoint(PATH.MODEL)
 # if the value monitored doesn't improve in 10 epochs, stop training.
 earlystop_cb = callbacks.EarlyStopping(monitor='loss', patience=10, mode='min')
 # fit model
-model.fit(X, y, batch_size=10, epochs=1000, verbose=2, callbacks=[checkpoint_cb, earlystop_cb])
+model.fit(X, y, batch_size=args.BATCH_SIZE, epochs=args.EPOCHS, verbose=2, callbacks=[checkpoint_cb, earlystop_cb])
 

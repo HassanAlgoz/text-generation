@@ -4,6 +4,7 @@ from keras.models import load_model
 from keras.preprocessing.sequence import pad_sequences
 import re
 import helper.paths as PATH
+import helper.args as args
 
 # generate a sequence from a language model
 def generate_seq(model, tokenizer, seq_length, seed_text, n_words):
@@ -47,7 +48,7 @@ def fill(text):
 with open(PATH.OUTPUT, mode="w", encoding='utf-8') as f:
 	# for _ in range(10):
 	seed_text = ' '.join(lines[randint(0, len(lines))].split(' ')[:seq_length])
-	output = seed_text + ' ' + generate_seq(model, tokenizer, seq_length, seed_text, 50)
+	output = seed_text + ' ' + generate_seq(model, tokenizer, seq_length, seed_text, args.GENERATE_LENGTH)
 	output = fill(output)
 	f.write(output + '\n')
 

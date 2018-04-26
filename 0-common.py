@@ -5,6 +5,7 @@ import sklearn
 import time
 import pickle
 import helper.paths as PATH
+import helper.args as args
 
 def filter_text(text):
     # strip tashkeel
@@ -21,7 +22,7 @@ def filter_text(text):
 
 startTime = time.time()
 
-# Count the most common 10,000 tokens
+# Count the most common n tokens
 counter = collections.Counter()
 filtered_text = ''
 with open(PATH.TEXT, mode='r', encoding='utf-8') as f:
@@ -33,9 +34,9 @@ with open(PATH.TEXT, mode='r', encoding='utf-8') as f:
         counter.update(tokens)
         line = f.readline()
 
-# Get only the most common 10,000
+# Get only the most common n
 most_common = list()
-for word, count in counter.most_common(10000):
+for word, count in counter.most_common(args.MAX_VOCAB_SIZE):
     most_common.append(word)
 print("most common:", len(most_common))
 del counter

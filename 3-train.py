@@ -23,7 +23,7 @@ sequences = np.array(tokenizer.texts_to_sequences(texts))
 vocab_size = len(tokenizer.word_index) + 1
 print(sequences[:5])
 word_index = tokenizer.word_index
-# del tokenizer
+del tokenizer
 
 # Embeddings
 word2vec = gensim.models.Word2Vec.load(PATH.GENSIM_MODEL)

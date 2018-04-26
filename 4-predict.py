@@ -3,6 +3,7 @@ from pickle import load
 from keras.models import load_model
 from keras.preprocessing.sequence import pad_sequences
 import re
+import helper.paths as PATH
 
 # generate a sequence from a language model
 def generate_seq(model, tokenizer, seq_length, seed_text, n_words):
@@ -28,25 +29,26 @@ def generate_seq(model, tokenizer, seq_length, seed_text, n_words):
 	return ' '.join(result)
 
 # load doc into memory
-with open('./processed/sequences.txt', encoding='utf-8') as f:
+with open(PATH.SEQUENCES, encoding='utf-8') as f:
 	lines = f.read().split('\n')
 seq_length = len(lines[0].split()) - 1
 
 # load the model
-model = load_model('./results/model.h5')
+model = load_model(PATH.MODEL)
 
 # load the tokenizer
-tokenizer = load(open('./processed/tokenizer.pkl', 'rb'))
+tokenizer = load(open(PATH.TOKENIZER, 'rb'))
 
 def fill(text):
 	# replace 'NUM' with a random number
 	text = re.sub(r'NUM', str(randint(0, 2018)), text, flags=re.IGNORECASE)
 	return text
 
-with open('./results/output.txt', mode="w", encoding='utf-8') as f:
+with open(PATH.OUTPUT, mode="w", encoding='utf-8') as f:
 	# for _ in range(10):
 	seed_text = ' '.join(lines[randint(0, len(lines))].split(' ')[:seq_length])
 	output = seed_text + ' ' + generate_seq(model, tokenizer, seq_length, seed_text, 50)
 	output = fill(output)
 	f.write(output + '\n')
-print("Done!")
+
+print("Prediction output written to {}".format(PATH.OUTPUT))

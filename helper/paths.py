@@ -1,0 +1,8 @@
+TEXT         = './raw-data/text.txt'
+CLEAN_TEXT   = './processed/clean_text.txt'
+SEQUENCES    = './processed/sequences.txt'
+TOKENIZER    = './processed/tokenizer.pkl'
+GENSIM_MODEL = './results/gensim.model'
+MODEL        = './results/model.h5'
+OUTPUT       = './results/output.txt'
+MOST_COMMON  = './processed/most_common.txt'

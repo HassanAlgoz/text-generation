@@ -2,7 +2,7 @@ import numpy as np
 import pickle
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
-from keras.utils import to_categorical
+from keras.utils import to_categorical, Sequence
 from keras.models import Sequential
 from keras.models import load_model
 from keras import layers
@@ -11,26 +11,22 @@ import warnings
 warnings.filterwarnings(action='ignore', category=UserWarning, module='gensim')
 import gensim
 import os
-
-PATH_SEQUENCES    = './processed/sequences.txt'
-PATH_TOKENIZER    = './processed/tokenizer.pkl'
-PATH_GENSIM_MODEL = './results/gensim.model'
-PATH_MODEL        = './results/model.h5'
+import helper.paths as PATH
 
 # load sequences
-with open(PATH_SEQUENCES, encoding='utf-8') as f:
+with open(PATH.SEQUENCES, encoding='utf-8') as f:
 	texts = f.read().split('\n')
 
 # Load tokenizer and convert word sequences to their integers
-tokenizer = pickle.load(open(PATH_TOKENIZER, 'rb'))
+tokenizer = pickle.load(open(PATH.TOKENIZER, 'rb'))
 sequences = np.array(tokenizer.texts_to_sequences(texts))
 vocab_size = len(tokenizer.word_index) + 1
 print(sequences[:5])
 word_index = tokenizer.word_index
-del tokenizer
+# del tokenizer
 
 # Embeddings
-word2vec = gensim.models.Word2Vec.load(PATH_GENSIM_MODEL)
+word2vec = gensim.models.Word2Vec.load(PATH.GENSIM_MODEL)
 word_vectors = word2vec.wv
 vector_size = word_vectors.vector_size
 del word2vec
@@ -46,14 +42,15 @@ del word_vectors
 # separate into input and output
 print('separate into input and output...')
 X, y = sequences[:, :-1], sequences[:, -1]
+num_sequences = len(sequences)
 del sequences
 y = to_categorical(y, num_classes=vocab_size)
 seq_length = X.shape[1]
 
 # Define model
-if os.path.exists(PATH_MODEL):
+if os.path.exists(PATH.MODEL):
     print("loading a saved model...")
-    model = load_model(PATH_MODEL)
+    model = load_model(PATH.MODEL)
 else:
     print("starting from a new model...")
     model = Sequential([
@@ -74,7 +71,7 @@ model.summary()
 
 
 # save model after each epoch
-checkpoint_cb = callbacks.ModelCheckpoint(PATH_MODEL)
+checkpoint_cb = callbacks.ModelCheckpoint(PATH.MODEL)
 # if the value monitored doesn't improve in 10 epochs, stop training.
 earlystop_cb = callbacks.EarlyStopping(monitor='loss', patience=10, mode='min')
 # fit model

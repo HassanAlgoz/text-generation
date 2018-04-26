@@ -2,9 +2,10 @@ import re
 import string
 from keras.preprocessing.text import Tokenizer
 import pickle
+import helper.paths as PATH
  
 # load text
-with open('./processed/clean_text.txt', encoding='utf-8') as f:
+with open(PATH.CLEAN_TEXT, encoding='utf-8') as f:
 	text = f.read()
 print(text[:200])
 
@@ -17,7 +18,7 @@ print('Unique Tokens: %d' % len(set(tokens)))
 tokenizer = Tokenizer(filters="", oov_token="UNK") # we don't filter any characters, we need commans full stops and everything.
 tokenizer.fit_on_texts(tokens)
 # save the tokenizer
-pickle.dump(tokenizer, open('./processed/tokenizer.pkl', 'wb'))
+pickle.dump(tokenizer, open(PATH.TOKENIZER, 'wb'))
 del tokenizer
  
 # organize into sequences of tokens
@@ -32,5 +33,5 @@ for i in range(length, len(tokens)):
 	sequences.append(line)
 print('Total Sequences: %d' % len(sequences))
 
-with open('./processed/sequences.txt', mode='w', encoding='utf-8') as f:
+with open(PATH.SEQUENCES, mode='w', encoding='utf-8') as f:
 	f.write('\n'.join(sequences))

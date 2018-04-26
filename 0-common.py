@@ -4,6 +4,7 @@ import collections
 import sklearn
 import time
 import pickle
+import helper.paths as PATH
 
 def filter_text(text):
     # strip tashkeel
@@ -23,7 +24,7 @@ startTime = time.time()
 # Count the most common 10,000 tokens
 counter = collections.Counter()
 filtered_text = ''
-with open('./raw-data/text.txt', mode='r', encoding='utf-8') as f:
+with open(PATH.TEXT, mode='r', encoding='utf-8') as f:
     line = f.readline()
     while line:
         tokens = filter_text(line).replace('\n', ' ').split()
@@ -39,13 +40,13 @@ for word, count in counter.most_common(10000):
 print("most common:", len(most_common))
 del counter
 
-with open('./processed/most_common_{}.txt'.format(len(most_common)), mode="w", encoding='utf-8') as f:
+with open(PATH.MOST_COMMON, mode="w", encoding='utf-8') as f:
     f.write('\n'.join(most_common))
 
 clean_text = ' '.join([t for t in filtered_text.split() if t in most_common])
 
 # Write them to clean_text.txt
-with open('./processed/clean_text.txt', mode='w', encoding='utf-8') as f:   
+with open(PATH.CLEAN_TEXT, mode='w', encoding='utf-8') as f:   
     f.write(clean_text)
 
 # Display elapsed time

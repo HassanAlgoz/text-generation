@@ -21,7 +21,7 @@ pickle.dump(tokenizer, open('./processed/tokenizer.pkl', 'wb'))
 del tokenizer
  
 # organize into sequences of tokens
-length = 2 + 1
+length = 15 + 1
 sequences = list()
 for i in range(length, len(tokens)):
 	# select sequence of tokens

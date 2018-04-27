@@ -6,6 +6,12 @@ import time
 import pickle
 import helper.paths as PATH
 import helper.args as args
+import numpy as np
+
+def is_punctuation(char):
+    code = ord(char)
+    if (ord('\u0020') <= code and code <= ord('\u0040')) or code == ord('\u061F') or code == ord('\u060C') or code == ord('\u061B') or code == ord('\u061F'):
+        return True
 
 def filter_text(text):
     # strip tashkeel
@@ -16,23 +22,28 @@ def filter_text(text):
     text = re.sub(r'[a-zA-Z]+', 'ENG', text)
     # replace numbers
     text = re.sub(r'\d+', 'NUM', text)
-    # remove [[NUM]]
-    text = re.sub(r'\[\[NUM\]\]', '', text)
+    # separate punctuation from words
+    split = text.split(' ')
+    for i, word in enumerate(split):
+        for j, char in enumerate(word):
+            if is_punctuation(char):
+                split[i] = word[:j] + ' ' + word[j:]
+    text = ' '.join(split)
     return text
 
 startTime = time.time()
 
 # Count the most common n tokens
 counter = collections.Counter()
-filtered_text = ''
+all_tokens = list()
 with open(PATH.TEXT, mode='r', encoding='utf-8') as f:
-    line = f.readline()
-    while line:
+    for line in f:
         tokens = filter_text(line).replace('\n', ' ').split()
-        tokens = [t for t in tokens if t.strip() != '']
-        filtered_text += ' '.join(tokens)
-        counter.update(tokens)
-        line = f.readline()
+        tokens = [t for t in tokens if len(t) > 0]
+        all_tokens.extend(tokens)
+        print(tokens)
+
+    counter.update(all_tokens)
 
 # Get only the most common n
 most_common = list()
@@ -44,7 +55,7 @@ del counter
 with open(PATH.MOST_COMMON, mode="w", encoding='utf-8') as f:
     f.write('\n'.join(most_common))
 
-clean_text = ' '.join([t for t in filtered_text.split() if t in most_common])
+clean_text = ' '.join([t for t in all_tokens if t in most_common])
 
 # Write them to clean_text.txt
 with open(PATH.CLEAN_TEXT, mode='w', encoding='utf-8') as f:   

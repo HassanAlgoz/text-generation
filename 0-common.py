@@ -22,7 +22,7 @@ def filter_text(text):
     text = re.sub(r'[a-zA-Z]+', 'ENG', text)
     # replace numbers
     text = re.sub(r'\d+', 'NUM', text)
-    # separate punctuation from words
+    # separate punctuation from words (trailing punctuation only)
     split = text.split(' ')
     for i, word in enumerate(split):
         for j, char in enumerate(word):
@@ -31,6 +31,27 @@ def filter_text(text):
     text = ' '.join(split)
     return text
 
+
+def separate_waw(all_tokens):
+    # Step 1: find such word (token) and insert a space in-between
+    # ["والغراب"] -> ["و الغراب"]
+    for i, token in enumerate(all_tokens):
+        if token[0] == 'و' and token in set(all_tokens):
+            all_tokens[i] = token[0] + ' ' + token[1:]
+    
+    # Step 2: separate into two elements
+    # ["و الغراب"] -> ["و", "الغراب"]
+    new_tokens = list()
+    for token in all_tokens:
+        if len(token) > 1 and token[1] == ' ':
+            new_tokens.append(token[0])
+            new_tokens.append(token[2:])
+        else:
+            new_tokens.append(token)
+    
+    return new_tokens
+
+
 startTime = time.time()
 
 # Count the most common n tokens
@@ -38,12 +59,14 @@ counter = collections.Counter()
 all_tokens = list()
 with open(PATH.TEXT, mode='r', encoding='utf-8') as f:
     for line in f:
-        tokens = filter_text(line).replace('\n', ' ').split()
-        tokens = [t for t in tokens if len(t) > 0]
+        tokens = filter_text(line).split()
+        tokens = [token for token in tokens if len(token) > 0]
         all_tokens.extend(tokens)
-        print(tokens)
 
-    counter.update(all_tokens)
+    # Separate "waw و", notice: passing a copy of all_tokens not a reference
+    new_tokens = separate_waw(list(all_tokens))
+
+    counter.update(new_tokens)
 
 # Get only the most common n
 most_common = list()
@@ -55,9 +78,15 @@ del counter
 with open(PATH.MOST_COMMON, mode="w", encoding='utf-8') as f:
     f.write('\n'.join(most_common))
 
-clean_text = ' '.join([t for t in all_tokens if t in most_common])
+# When writing clean_text, separate the و if the token without و is in most_common
+clean_text = ''
+for token in all_tokens:
+    if token in most_common:
+        clean_text += token + ' '
+    elif token[0] == 'و' and token[1:] in most_common:
+        clean_text += token[0] + ' ' + token[1:] + ' '
 
-# Write them to clean_text.txt
+# Write clean_text to file
 with open(PATH.CLEAN_TEXT, mode='w', encoding='utf-8') as f:   
     f.write(clean_text)
 

@@ -11,20 +11,24 @@ import warnings
 warnings.filterwarnings(action='ignore', category=UserWarning, module='gensim')
 import gensim
 import os
+import sys
 import helper.paths as PATH
 import helper.args as args
+from helper.tick import Tick
+
+tick = Tick()
 
 # load sequences
 with open(PATH.SEQUENCES, encoding='utf-8') as f:
 	texts = f.read().split('\n')
 
+num_sequences = len(texts)
 # Load tokenizer and convert word sequences to their integers
 tokenizer = pickle.load(open(PATH.TOKENIZER, 'rb'))
 sequences = np.array(tokenizer.texts_to_sequences(texts))
 vocab_size = len(tokenizer.word_index) + 1
-print(sequences[:5])
 word_index = tokenizer.word_index
-del tokenizer
+# del tokenizer
 
 # Embeddings
 word2vec = gensim.models.Word2Vec.load(PATH.GENSIM_MODEL)
@@ -40,14 +44,6 @@ for word, i in word_index.items():
 print('Null word embeddings: %d' % np.sum(np.sum(embedding_matrix, axis=1) == 0))
 del word_vectors
 
-# separate into input and output
-print('separate into input and output...')
-X, y = sequences[:, :-1], sequences[:, -1]
-num_sequences = len(sequences)
-del sequences
-y = to_categorical(y, num_classes=vocab_size)
-seq_length = X.shape[1]
-
 # Define model
 if os.path.exists(PATH.MODEL):
     print("loading a saved model...")
@@ -58,11 +54,11 @@ else:
         layers.Embedding(
             input_dim=vocab_size,
             output_dim=vector_size,
-            input_length=seq_length,
+            input_length=args.SEQUENCE_LENGTH,
             trainable=False,
             weights=[embedding_matrix]
         ),
-        layers.GRU(vector_size),
+        layers.GRU(50),
         layers.Dense(vocab_size, activation='softmax'),
     ])
     # compile model
@@ -70,11 +66,52 @@ else:
 
 model.summary()
 
-
 # save model after each epoch
 checkpoint_cb = callbacks.ModelCheckpoint(PATH.MODEL)
 # if the value monitored doesn't improve in 10 epochs, stop training.
 earlystop_cb = callbacks.EarlyStopping(monitor='loss', patience=10, mode='min')
-# fit model
-model.fit(X, y, batch_size=args.BATCH_SIZE, epochs=args.EPOCHS, verbose=2, callbacks=[checkpoint_cb, earlystop_cb])
 
+# separate into input and output
+# print('separate into input and output...')
+# X, y = sequences[:, :-1], sequences[:, -1]
+# del sequences
+# y = to_categorical(y, num_classes=vocab_size)
+
+# fit model
+# print("fitting...")
+# model.fit(X, y, batch_size=args.BATCH_SIZE, epochs=args.EPOCHS, verbose=2, callbacks=[checkpoint_cb, earlystop_cb])
+# steps_per_epoch=num_sequences // args.BATCH_SIZE
+
+def sequence_generator():
+    while True:
+        with open(PATH.SEQUENCES, encoding='utf-8') as f:
+            X = np.zeros((args.BATCH_SIZE, args.SEQUENCE_LENGTH))
+            y = np.zeros((args.BATCH_SIZE))
+            i = 0
+            for line in f:
+                # create numpy arrays of input data
+                # and labels, from each line in the file
+                encoded = np.array(tokenizer.texts_to_sequences([line])[0])
+                np.put(X, i, encoded[:-1])
+                np.put(y, i, encoded[-1])
+
+                i = (i+1) % args.BATCH_SIZE
+                if i == 0:
+                    yield X, to_categorical(y, num_classes=vocab_size)
+
+num_workers = os.cpu_count()
+use_multiprocessing = sys.platform.startswith('linux') # use_multiprocessing doesn't work on windows.
+print("fitting (generator)...")
+# https://keras.io/models/sequential/#sequential-model-methods
+model.fit_generator(
+    generator=sequence_generator(),
+    # validation_data=
+    epochs=args.EPOCHS,
+    steps_per_epoch=num_sequences // args.BATCH_SIZE,
+    verbose=2,
+    callbacks=[checkpoint_cb, earlystop_cb],
+    workers=num_workers,
+    use_multiprocessing=use_multiprocessing
+)
+
+tick.tock()

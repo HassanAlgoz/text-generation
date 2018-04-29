@@ -2,9 +2,13 @@ import re
 import string
 from keras.preprocessing.text import Tokenizer
 import pickle
+import time
 import helper.paths as PATH
 import helper.args as args
- 
+from helper.tick import Tick
+
+tick = Tick()
+
 # load text
 with open(PATH.CLEAN_TEXT, encoding='utf-8') as f:
 	text = f.read()
@@ -37,3 +41,5 @@ print('Total Sequences: %d' % len(sequences))
 
 with open(PATH.SEQUENCES, mode='w', encoding='utf-8') as f:
 	f.write('\n'.join(sequences))
+
+tick.tock()

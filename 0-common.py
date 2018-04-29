@@ -1,12 +1,16 @@
-from helper import arabic_const
 import re
 import collections
 import sklearn
 import time
 import pickle
+import numpy as np
+
+from helper import arabic_const
 import helper.paths as PATH
 import helper.args as args
-import numpy as np
+from helper.tick import Tick
+
+tick = Tick()
 
 def is_punctuation(char):
     code = ord(char)
@@ -51,9 +55,6 @@ def separate_waw(all_tokens):
     
     return new_tokens
 
-
-startTime = time.time()
-
 # Count the most common n tokens
 counter = collections.Counter()
 all_tokens = list()
@@ -65,6 +66,7 @@ with open(PATH.TEXT, mode='r', encoding='utf-8') as f:
 
     # Separate "waw و", notice: passing a copy of all_tokens not a reference
     new_tokens = separate_waw(list(all_tokens))
+    # new_tokens = all_tokens
 
     counter.update(new_tokens)
 
@@ -90,6 +92,4 @@ for token in all_tokens:
 with open(PATH.CLEAN_TEXT, mode='w', encoding='utf-8') as f:   
     f.write(clean_text)
 
-# Display elapsed time
-endTime = time.time()
-print("Elapsed Time: {}s".format(endTime - startTime))
+tick.tock()

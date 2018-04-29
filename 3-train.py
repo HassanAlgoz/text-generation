@@ -14,9 +14,10 @@ import os
 import sys
 import helper.paths as PATH
 import helper.args as args
-from helper.tick import Tick
+from helper.ticker import Ticker
 
-tick = Tick()
+ticker = Ticker()
+ticker.tick()
 
 # load sequences
 with open(PATH.SEQUENCES, encoding='utf-8') as f:
@@ -114,4 +115,4 @@ model.fit_generator(
     use_multiprocessing=use_multiprocessing
 )
 
-tick.tock()
+ticker.tock()

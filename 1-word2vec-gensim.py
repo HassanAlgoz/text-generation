@@ -4,9 +4,10 @@ from gensim.models import Word2Vec, Phrases
 import os
 import helper.paths as PATH
 import helper.args as args
-from helper.tick import Tick
+from helper.ticker import Ticker
 
-tick = Tick()
+ticker = Ticker()
+ticker.tick()
 
 class SentenceGenerator(object):
     def __init__(self, filepath):
@@ -29,14 +30,14 @@ with open(PATH.CLEAN_TEXT, encoding='utf-8') as f:
 # Note that there is a gensim.models.phrases module which lets you automatically detect 
 # phrases longer than one word. Using phrases, you can learn a word2vec model where “words”
 #  are actually multiword expressions, such as new_york_times or financial_crisis:
-tick_1 = Tick("Building Word2Vec")
+ticker.tick("Building Word2Vec")
 bigram_transformer = Phrases(sentences)
 model = Word2Vec(bigram_transformer[sentences], size=args.EMBEDDING_HIDDEN_SIZE, window=args.EMBEDDING_WINDOW_SIZE, max_vocab_size=args.MAX_VOCAB_SIZE,  min_count=5, workers=os.cpu_count())
-tick_1.tock()
+ticker.tock()
 
-tick_2 = Tick("Gensim Training")
+ticker.tick("Gensim Training")
 model.train(bigram_transformer[sentences], total_words=num_words, epochs=args.EMBEDDING_EPOCHS)
-tick_2.tock()
+ticker.tock()
 
 # Save the model
 model.save(PATH.GENSIM_MODEL)
@@ -46,4 +47,4 @@ model.save(PATH.GENSIM_MODEL)
 # m2 = gensim.models.Word2Vec.load('./results/gensim.model')
 # print(m2.wv["قال"])
 
-tick.tock()
+ticker.tock()

@@ -5,9 +5,10 @@ import pickle
 import time
 import helper.paths as PATH
 import helper.args as args
-from helper.tick import Tick
+from helper.ticker import Ticker
 
-tick = Tick()
+ticker = Ticker()
+ticker.tick()
 
 # load text
 with open(PATH.CLEAN_TEXT, encoding='utf-8') as f:
@@ -42,4 +43,4 @@ print('Total Sequences: %d' % len(sequences))
 with open(PATH.SEQUENCES, mode='w', encoding='utf-8') as f:
 	f.write('\n'.join(sequences))
 
-tick.tock()
+ticker.tock()

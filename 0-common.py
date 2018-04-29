@@ -8,9 +8,10 @@ import numpy as np
 from helper import arabic_const
 import helper.paths as PATH
 import helper.args as args
-from helper.tick import Tick
+from helper.ticker import Ticker
 
-tick = Tick()
+ticker = Ticker()
+ticker.tick()
 
 def is_punctuation(char):
     code = ord(char)
@@ -92,4 +93,4 @@ for token in all_tokens:
 with open(PATH.CLEAN_TEXT, mode='w', encoding='utf-8') as f:   
     f.write(clean_text)
 
-tick.tock()
+ticker.tock()

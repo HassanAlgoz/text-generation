@@ -5,9 +5,10 @@ from keras.preprocessing.sequence import pad_sequences
 import re
 import helper.paths as PATH
 import helper.args as args
-from helper.tick import Tick
+from helper.ticker import Ticker
 
-tick = Tick()
+ticker = Ticker()
+ticker.tick()
 
 # generate a sequence from a language model
 def generate_seq(model, tokenizer, seq_length, seed_text, n_words):
@@ -57,4 +58,4 @@ with open(PATH.OUTPUT, mode="w", encoding='utf-8') as f:
 
 print("Prediction output written to {}".format(PATH.OUTPUT))
 
-tick.tock()
+ticker.tock()

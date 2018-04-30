@@ -61,7 +61,7 @@ counter = collections.Counter()
 all_tokens = list()
 with open(PATH.TEXT, mode='r', encoding='utf-8') as f:
     for line in f:
-        tokens = filter_text(line).split()
+        tokens = filter_text(line + ' .').split()
         tokens = [token for token in tokens if len(token) > 0]
         all_tokens.extend(tokens)
 
@@ -82,15 +82,17 @@ with open(PATH.MOST_COMMON, mode="w", encoding='utf-8') as f:
     f.write('\n'.join(most_common))
 
 # When writing clean_text, separate the و if the token without و is in most_common
-clean_text = ''
-for token in all_tokens:
-    if token in most_common:
-        clean_text += token + ' '
-    elif token[0] == 'و' and token[1:] in most_common:
-        clean_text += token[0] + ' ' + token[1:] + ' '
-
 # Write clean_text to file
 with open(PATH.CLEAN_TEXT, mode='w', encoding='utf-8') as f:   
-    f.write(clean_text)
+    for token in all_tokens:
+        if token in most_common:
+            f.write(token)
+        elif token[0] == 'و' and token[1:] in most_common:
+            f.write(token[0] + ' ' + token[1:])
+    
+        if token == ".":
+            f.write('\n')
+        else:
+            f.write(' ')
 
 ticker.tock()

@@ -60,6 +60,7 @@ else:
             weights=[embedding_matrix]
         ),
         layers.GRU(50),
+        layers.Dense(50),
         layers.Dense(vocab_size, activation='softmax'),
     ])
     # compile model
@@ -72,17 +73,6 @@ checkpoint_cb = callbacks.ModelCheckpoint(PATH.MODEL)
 # if the value monitored doesn't improve in 10 epochs, stop training.
 earlystop_cb = callbacks.EarlyStopping(monitor='loss', patience=10, mode='min')
 
-# separate into input and output
-# print('separate into input and output...')
-# X, y = sequences[:, :-1], sequences[:, -1]
-# del sequences
-# y = to_categorical(y, num_classes=vocab_size)
-
-# fit model
-# print("fitting...")
-# model.fit(X, y, batch_size=args.BATCH_SIZE, epochs=args.EPOCHS, verbose=2, callbacks=[checkpoint_cb, earlystop_cb])
-# steps_per_epoch=num_sequences // args.BATCH_SIZE
-
 def sequence_generator():
     while True:
         with open(PATH.SEQUENCES, encoding='utf-8') as f:
@@ -90,8 +80,7 @@ def sequence_generator():
             y = np.zeros((args.BATCH_SIZE))
             i = 0
             for line in f:
-                # create numpy arrays of input data
-                # and labels, from each line in the file
+                # encode input and output as integers
                 encoded = np.array(tokenizer.texts_to_sequences([line])[0])
                 np.put(X, i, encoded[:-1])
                 np.put(y, i, encoded[-1])

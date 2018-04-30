@@ -24,7 +24,7 @@ def filter_text(text):
     # strip tatweel
     text = re.sub(u'[%s]' % arabic_const.TATWEEL, '', text)
     # replace english
-    text = re.sub(r'[a-zA-Z]+', 'ENG', text)
+    # text = re.sub(r'[a-zA-Z]+', 'ENG', text)
     # replace numbers
     text = re.sub(r'\d+', 'NUM', text)
     # separate punctuation from words (trailing punctuation only)

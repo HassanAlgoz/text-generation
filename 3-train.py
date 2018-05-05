@@ -81,8 +81,7 @@ def sequence_generator():
             i = 0
             for line in f:
                 # encode input and output as integers
-                encoded = np.array(tokenizer.texts_to_sequences([line])[0])
-                # encoded = np.array([word_index[w] for w in line.split()])
+                encoded = np.array([word_index[w] for w in line.split()])
                 X[i] = encoded[:-1]
                 y[i] = encoded[-1]
 

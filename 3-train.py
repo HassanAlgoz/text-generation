@@ -24,12 +24,10 @@ with open(PATH.SEQUENCES, encoding='utf-8') as f:
 	texts = f.read().split('\n')
 
 num_sequences = len(texts)
-# Load tokenizer and convert word sequences to their integers
+# Load tokenizer
 tokenizer = pickle.load(open(PATH.TOKENIZER, 'rb'))
-sequences = np.array(tokenizer.texts_to_sequences(texts))
 vocab_size = len(tokenizer.word_index) + 1
 word_index = tokenizer.word_index
-# del tokenizer
 
 # Embeddings
 word2vec = gensim.models.Word2Vec.load(PATH.GENSIM_MODEL)
@@ -51,27 +49,29 @@ if os.path.exists(PATH.MODEL):
     model = load_model(PATH.MODEL)
 else:
     print("starting from a new model...")
-    model = Sequential([
-        layers.Embedding(
+    model = Sequential()
+    model.add(layers.Embedding(
             input_dim=vocab_size,
             output_dim=vector_size,
             input_length=args.SEQUENCE_LENGTH,
             trainable=False,
             weights=[embedding_matrix]
-        ),
-        layers.GRU(50),
-        layers.Dense(50),
-        layers.Dense(vocab_size, activation='softmax'),
-    ])
+        )
+    )
+    model.add(layers.GRU(150, return_sequences=True, recurrent_dropout=0.2))
+    model.add(layers.Dropout(0.2))
+    model.add(layers.GRU(150, recurrent_dropout=0.2))
+    model.add(layers.Dense(150))
+    model.add(layers.Dense(vocab_size, activation='softmax'))
     # compile model
     model.compile(loss='categorical_crossentropy', optimizer=args.OPTIMIZER, metrics=['accuracy'])
 
 model.summary()
 
 # save model after each epoch
-checkpoint_cb = callbacks.ModelCheckpoint(PATH.MODEL)
+checkpoint_cb = callbacks.ModelCheckpoint(PATH.MODEL, period=args.PERIOD)
 # if the value monitored doesn't improve in 10 epochs, stop training.
-earlystop_cb = callbacks.EarlyStopping(monitor='loss', patience=10, mode='min')
+earlystop_cb = callbacks.EarlyStopping(monitor='loss', patience=args.PATIENCE, mode='min')
 
 def sequence_generator():
     while True:
@@ -82,8 +82,9 @@ def sequence_generator():
             for line in f:
                 # encode input and output as integers
                 encoded = np.array(tokenizer.texts_to_sequences([line])[0])
-                np.put(X, i, encoded[:-1])
-                np.put(y, i, encoded[-1])
+                # encoded = np.array([word_index[w] for w in line.split()])
+                X[i] = encoded[:-1]
+                y[i] = encoded[-1]
 
                 i = (i+1) % args.BATCH_SIZE
                 if i == 0:
@@ -98,7 +99,8 @@ model.fit_generator(
     # validation_data=
     epochs=args.EPOCHS,
     steps_per_epoch=num_sequences // args.BATCH_SIZE,
-    verbose=2,
+    # sample_per_epoch=,
+    verbose=args.VERBOSE,
     callbacks=[checkpoint_cb, earlystop_cb],
     workers=num_workers,
     use_multiprocessing=use_multiprocessing

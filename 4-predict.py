@@ -50,12 +50,45 @@ def fill(text):
 	text = re.sub(r'<eos>', '.', text, flags=re.IGNORECASE)
 	return text
 
+def try_generate(seed_text='', generate_length=10, max_tries=10):
+	
+	count_removed = 1 # initially to enter the loop
+	
+	generated = generate_seq(model, tokenizer, seq_length, seed_text, generate_length)
+	while(count_removed > 0 and max_tries > 0):
+		max_tries -= 1
+		# remove consecutive duplicates
+		split = generated.split(" ")
+		count_removed = 0
+		to_be_removed = list()
+		for i in range(1, len(split)):
+			if split[i-1] == split[i]:
+				to_be_removed.append(i)
+				count_removed += 1
+		for i in to_be_removed:
+			split[i] = ''
+		
+		generated = ' '.join([word for word in split if word != ''])
+		print("Removed {} duplicates".format(count_removed))
+		
+		generated += ' ' + generate_seq(model, tokenizer, seq_length, seed_text + " " + generated, count_removed)
+	
+	return generated[:-1]
+
 with open(PATH.OUTPUT, mode="w", encoding='utf-8') as f:
-	# for _ in range(10):
 	seed_text = ' '.join(lines[randint(0, len(lines))].split(' ')[:seq_length])
-	output = seed_text + '\n\n' + generate_seq(model, tokenizer, seq_length, seed_text, args.GENERATE_LENGTH)
-	output = fill(output)
-	f.write(output + '\n')
+
+	# Generate
+	generated = try_generate(seed_text=seed_text, generate_length=50, max_tries=10)
+	
+	# Poetry Format
+	# split = fill(generated).split(" ")
+	# output = ' '.join(split[:5]) + '\t\t' + ' '.join(split[5:10]) + \
+	# '\n' + ' '.join(split[10:15]) + '\t\t' + ' '.join(split[15:20])
+	# ' '.join(seed_text[:seq_length // 2].split(" ")) + '\t\t' + ' '.join(seed_text[seq_length // 2:].split(" ")) + \
+	
+	output = fill(seed_text + '\n\n' + generated)
+	f.write(output)
 
 print("Prediction output written to {}".format(PATH.OUTPUT))
 

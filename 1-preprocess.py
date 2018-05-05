@@ -15,29 +15,23 @@ from helper.ticker import Ticker
 ticker = Ticker()
 ticker.tick()
 
-def is_punctuation(char):
-    code = ord(char)
-    if (ord('\u0020') <= code and code <= ord('\u0040')) or code == ord('\u061F') or code == ord('\u060C') or code == ord('\u061B') or code == ord('\u061F'):
-        return True
-
 def filter_text(text):
+    # replace english
+    # text = re.sub(r'[a-zA-Z]+', 'ENG', text)
     # strip tashkeel
     text = arabic_const.HARAKAT_PAT.sub('', text)
     # strip tatweel
     text = re.sub(u'[%s]' % arabic_const.TATWEEL, '', text)
-    # replace english
-    # text = re.sub(r'[a-zA-Z]+', 'ENG', text)
-    # replace numbers
-    text = re.sub(r'\d+', 'NUM', text)
-    # separate punctuation from words (trailing punctuation only)
-    # split = text.split(' ')
-    # for i, word in enumerate(split):
-    #     for j, char in enumerate(word):
-    #         if is_punctuation(char):
-    #             split[i] = word[:j] + ' ' + word[j:]
-    # text = ' '.join(split)
-    return text
+    # split punctuation
+    split = re.split(r'(\W+)', text)
+    text = ' '.join([word.strip() for word in split if len(word.strip()) > 0])
 
+    # replace numbers
+    text = re.sub(r'\d+', '<num>', text)
+    # replace '.' at the end of the line with '<eos>' (end of sentece)
+    text = re.sub(r' \.$', '<eos>', text)
+
+    return text.lower()
 
 def separate_waw(all_tokens):
     # Step 1: find such word (token) and insert a space in-between
@@ -65,7 +59,7 @@ with open(PATH.TEXT, mode='r', encoding='utf-8') as f:
     for line in f:
         if line[0] == '\n':
             continue
-        tokens = text_to_word_sequence(filter_text(line))
+        tokens = filter_text(line).split(" ")
         tokens = [token for token in tokens if len(token) > 0]
         all_tokens.extend(tokens)
 
@@ -100,7 +94,7 @@ print('Total Tokens: %d' % len(clean_tokens))
 print('Unique Tokens: %d' % len(set(clean_tokens)))
 
 # Tokenizer
-tokenizer = Tokenizer()
+tokenizer = Tokenizer(filters="")
 tokenizer.fit_on_texts(clean_tokens)
 # save the tokenizer
 pickle.dump(tokenizer, open(PATH.TOKENIZER, 'wb'))

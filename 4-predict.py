@@ -46,7 +46,8 @@ tokenizer = load(open(PATH.TOKENIZER, 'rb'))
 
 def fill(text):
 	# replace 'NUM' with a random number
-	text = re.sub(r'NUM', str(randint(0, 2018)), text, flags=re.IGNORECASE)
+	text = re.sub(r'<num>', str(randint(0, 2018)), text, flags=re.IGNORECASE)
+	text = re.sub(r'<eos>', '.', text, flags=re.IGNORECASE)
 	return text
 
 with open(PATH.OUTPUT, mode="w", encoding='utf-8') as f:

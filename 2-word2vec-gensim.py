@@ -30,7 +30,7 @@ with open(PATH.CLEAN_TEXT, encoding='utf-8') as f:
 # phrases longer than one word. Using phrases, you can learn a word2vec model where “words”
 #  are actually multiword expressions, such as new_york_times or financial_crisis:
 
-ticker.tick("five-gram phrases model")
+ticker.tick("bigram phrases model")
 bigram = Phrases(sentences)
 ticker.tock()
 
@@ -42,7 +42,7 @@ else:
     model = Word2Vec(bigram[sentences], size=args.EMBEDDING_HIDDEN_SIZE, window=args.EMBEDDING_WINDOW_SIZE, max_vocab_size=args.MAX_VOCAB_SIZE,  min_count=5, workers=os.cpu_count())
     ticker.tock()
 
-ticker.tick("Gensim Training")
+ticker.tick("Gensim Training ({} epochs)".format(args.EMBEDDING_EPOCHS))
 model.train(bigram[sentences], total_words=num_words, epochs=args.EMBEDDING_EPOCHS)
 ticker.tock()
 

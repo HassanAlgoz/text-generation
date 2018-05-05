@@ -29,7 +29,7 @@ def filter_text(text):
     # replace numbers
     text = re.sub(r'\d+', '<num>', text)
     # replace '.' at the end of the line with '<eos>' (end of sentece)
-    text = re.sub(r' \.$', '<eos>', text)
+    # text = re.sub(r' \.$', '<eos>', text)
 
     return text.lower()
 

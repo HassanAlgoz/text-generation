@@ -69,7 +69,7 @@ else:
 model.summary()
 
 # save model after each epoch
-checkpoint_cb = callbacks.ModelCheckpoint(PATH.MODEL, period=args.PERIOD)
+checkpoint_cb = callbacks.ModelCheckpoint(PATH.MODEL, period=args.PERIOD, save_best_only=True, monitor='loss', mode='min')
 # if the value monitored doesn't improve in 10 epochs, stop training.
 earlystop_cb = callbacks.EarlyStopping(monitor='loss', patience=args.PATIENCE, mode='min')
 

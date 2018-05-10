@@ -10,7 +10,7 @@ python 1-preprocess.py && python 2-word2vec.py && python 3-train.py
 ### Prediction
 For prediction you will need:
 1. The Trained model: `./results/model.h5`
-2. Tokenizer: `./processed/tokenizer`
+2. Tokenizer: `./processed/tokenizer.pkl`
 3. Sequences (to sample from): `./processed/sequences.txt`
 
 ### Configuration

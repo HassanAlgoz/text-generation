@@ -1,1 +1,1 @@
-python 1-preprocess.py && python 2-word2vec-gensim.py && python 3-train.py
+python 1-preprocess.py && python 2-word2vec.py && python 3-train.py

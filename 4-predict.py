@@ -6,25 +6,26 @@ import re
 import helper.paths as PATH
 import helper.args as args
 from helper.ticker import Ticker
+import numpy as np
 
 ticker = Ticker()
 ticker.tick()
 
 # generate a sequence from a language model
-def generate_seq(model, tokenizer, seq_length, seed_text, n_words):
+def generate_seq(model, word_index, seq_length, seed_text, n_words):
 	result = list()
 	in_text = seed_text
 	# generate a fixed number of words
 	for _ in range(n_words):
-		# encode the text as integer
-		encoded = tokenizer.texts_to_sequences([in_text])[0]
-		# truncate sequences to a fixed length
+		# map words to their integers
+		encoded = np.array([word_index[w] for w in in_text.split()])
+		# truncate to a fixed length (sliding window)
 		encoded = pad_sequences([encoded], maxlen=seq_length, truncating='pre')
-		# predict probabilities for each word
+		# predict
 		yhat = model.predict_classes(encoded, verbose=0)
 		# map predicted word index to word
 		out_word = ''
-		for word, index in tokenizer.word_index.items():
+		for word, index in word_index.items():
 			if index == yhat:
 				out_word = word
 				break
@@ -43,10 +44,13 @@ model = load_model(PATH.MODEL)
 
 # load the tokenizer
 tokenizer = load(open(PATH.TOKENIZER, 'rb'))
+word_index = tokenizer.word_index
+del tokenizer
 
 def fill(text):
 	# replace 'NUM' with a random number
-	text = re.sub(r'<num>', str(randint(0, 2018)), text, flags=re.IGNORECASE)
+	for _ in range(text.split().count('<num>')):
+		text = re.sub(r'<num>', str(randint(0, 2018)), text, flags=re.IGNORECASE, count=1)
 	text = re.sub(r'<eos>', '.', text, flags=re.IGNORECASE)
 	return text
 
@@ -54,7 +58,7 @@ def try_generate(seed_text='', generate_length=10, max_tries=10):
 	
 	count_removed = 1 # initially to enter the loop
 	
-	generated = generate_seq(model, tokenizer, seq_length, seed_text, generate_length)
+	generated = generate_seq(model, word_index, seq_length, seed_text, generate_length)
 	while(count_removed > 0 and max_tries > 0):
 		max_tries -= 1
 		# remove consecutive duplicates
@@ -71,7 +75,7 @@ def try_generate(seed_text='', generate_length=10, max_tries=10):
 		generated = ' '.join([word for word in split if word != ''])
 		print("Removed {} duplicates".format(count_removed))
 		
-		generated += ' ' + generate_seq(model, tokenizer, seq_length, seed_text + " " + generated, count_removed)
+		generated += ' ' + generate_seq(model, word_index, seq_length, seed_text + " " + generated, count_removed)
 	
 	return generated[:-1]
 

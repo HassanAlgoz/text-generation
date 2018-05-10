@@ -54,9 +54,12 @@ def fill(text):
 	text = re.sub(r'<eos>', '.', text, flags=re.IGNORECASE)
 	return text
 
-def try_generate(seed_text='', generate_length=10, max_tries=10):
+def try_generate(seed_text='', generate_length=1, max_tries=10, one_sentence=False):
 	
 	count_removed = 1 # initially to enter the loop
+	
+	if one_sentence:
+		generate_length = 1000 # acting as infinity
 	
 	generated = generate_seq(model, word_index, seq_length, seed_text, generate_length)
 	while(count_removed > 0 and max_tries > 0):
@@ -74,26 +77,37 @@ def try_generate(seed_text='', generate_length=10, max_tries=10):
 		
 		generated = ' '.join([word for word in split if word != ''])
 		print("Removed {} duplicates".format(count_removed))
+
+		if one_sentence:
+			s = generated.split()
+			for j, word in enumerate(s):
+				if word == '.':
+					print("Stopped at dot")
+					return ' '.join(s[:j+1])
 		
 		generated += ' ' + generate_seq(model, word_index, seq_length, seed_text + " " + generated, count_removed)
 	
 	return generated[:-1]
 
-with open(PATH.OUTPUT, mode="w", encoding='utf-8') as f:
-	seed_text = ' '.join(lines[randint(0, len(lines))].split(' ')[:seq_length])
 
-	# Generate
-	generated = try_generate(seed_text=seed_text, generate_length=50, max_tries=10)
-	
-	# Poetry Format
-	# split = fill(generated).split(" ")
-	# output = ' '.join(split[:5]) + '\t\t' + ' '.join(split[5:10]) + \
-	# '\n' + ' '.join(split[10:15]) + '\t\t' + ' '.join(split[15:20])
-	# ' '.join(seed_text[:seq_length // 2].split(" ")) + '\t\t' + ' '.join(seed_text[seq_length // 2:].split(" ")) + \
-	
-	output = fill(seed_text + '\n\n' + generated)
-	f.write(output)
 
-print("Prediction output written to {}".format(PATH.OUTPUT))
+# Predict / Generate
+generate_length = 20
+f1 = open('./results/output-sentence.txt', mode="w", encoding='utf-8')
+f2 = open('./results/output-{}.txt'.format(generate_length), mode="w", encoding='utf-8')
 
+seed_text = ' '.join(lines[randint(0, len(lines))].split(' ')[:seq_length])
+
+# Generate
+generated1 = try_generate(seed_text=seed_text, one_sentence=True, max_tries=10)
+generated2 = try_generate(seed_text=seed_text, generate_length=generate_length, max_tries=10)
+
+output1 = fill(seed_text + '\n\n' + generated1)
+output2 = fill(seed_text + '\n\n' + generated2)
+
+f1.write(output1)
+f2.write(output2)
+	 
+f1.close()
+f2.close()
 ticker.tock()

@@ -49,20 +49,21 @@ if os.path.exists(PATH.MODEL):
     model = load_model(PATH.MODEL)
 else:
     print("starting from a new model...")
-    model = Sequential()
-    model.add(layers.Embedding(
+    
+    model = Sequential([
+        layers.Embedding(
             input_dim=vocab_size,
             output_dim=vector_size,
             input_length=args.SEQUENCE_LENGTH,
             trainable=False,
             weights=[embedding_matrix]
-        )
-    )
-    model.add(layers.GRU(150, return_sequences=True, recurrent_dropout=0.2))
-    model.add(layers.Dropout(0.2))
-    model.add(layers.GRU(150, recurrent_dropout=0.2))
-    model.add(layers.Dense(150))
-    model.add(layers.Dense(vocab_size, activation='softmax'))
+        ),
+        layers.GRU(150, return_sequences=True, recurrent_dropout=0.2),
+        layers.Dropout(0.2),
+        layers.GRU(150, recurrent_dropout=0.2),
+        layers.Dense(150),
+        layers.Dense(vocab_size, activation='softmax'),
+    ])
     # compile model
     model.compile(loss='categorical_crossentropy', optimizer=args.OPTIMIZER, metrics=['accuracy'])
 
@@ -73,7 +74,7 @@ checkpoint_cb = callbacks.ModelCheckpoint(PATH.MODEL, period=args.PERIOD, save_b
 # if the value monitored doesn't improve in 10 epochs, stop training.
 earlystop_cb = callbacks.EarlyStopping(monitor='loss', patience=args.PATIENCE, mode='min')
 
-def sequence_generator():
+def batch_generator():
     while True:
         with open(PATH.SEQUENCES, encoding='utf-8') as f:
             X = np.zeros((args.BATCH_SIZE, args.SEQUENCE_LENGTH))
@@ -94,7 +95,7 @@ use_multiprocessing = sys.platform.startswith('linux') # use_multiprocessing doe
 print("fitting (generator)...")
 # https://keras.io/models/sequential/#sequential-model-methods
 model.fit_generator(
-    generator=sequence_generator(),
+    generator=batch_generator(),
     # validation_data=
     epochs=args.EPOCHS,
     steps_per_epoch=num_sequences // args.BATCH_SIZE,

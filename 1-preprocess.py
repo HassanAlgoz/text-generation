@@ -75,9 +75,6 @@ for word, count in counter.most_common(args.MAX_VOCAB_SIZE):
 print("most common:", len(most_common))
 del counter
 
-with open(PATH.MOST_COMMON, mode="w", encoding='utf-8') as f:
-    f.write('\n'.join(most_common))
-
 # Write clean_text file
 clean_tokens = [token for token in all_tokens if token in most_common]
 with open(PATH.CLEAN_TEXT, mode='w', encoding='utf-8') as f:

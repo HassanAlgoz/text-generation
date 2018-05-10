@@ -2,6 +2,7 @@ import warnings
 warnings.filterwarnings(action='ignore', category=UserWarning, module='gensim')
 from gensim.models import Word2Vec, Phrases
 import os
+import pickle
 import helper.paths as PATH
 import helper.args as args
 from helper.ticker import Ticker
@@ -30,17 +31,24 @@ with open(PATH.CLEAN_TEXT, encoding='utf-8') as f:
 # phrases longer than one word. Using phrases, you can learn a word2vec model where “words”
 #  are actually multiword expressions, such as new_york_times or financial_crisis:
 
-ticker.tick("bigram phrases model")
-bigram = Phrases(sentences)
-ticker.tock()
-
 if os.path.exists(PATH.GENSIM_MODEL):
     print("load an existing gensim model...")
     model = Word2Vec.load(PATH.GENSIM_MODEL)
 else:
     ticker.tick("Building Word2Vec")
-    model = Word2Vec(bigram[sentences], size=args.EMBEDDING_HIDDEN_SIZE, window=args.EMBEDDING_WINDOW_SIZE, max_vocab_size=args.MAX_VOCAB_SIZE,  min_count=5, workers=os.cpu_count())
+    model = Word2Vec(size=args.EMBEDDING_HIDDEN_SIZE, window=args.EMBEDDING_WINDOW_SIZE, max_vocab_size=args.MAX_VOCAB_SIZE,  min_count=5, workers=os.cpu_count())
+
+    tokenizer = pickle.load(open(PATH.TOKENIZER, 'rb'))
+    word_freq = tokenizer.word_counts
+    print(word_freq)
+    del tokenizer
+    model.build_vocab_from_freq(word_freq)
+    
     ticker.tock()
+
+ticker.tick("bigram phrases model")
+bigram = Phrases(sentences)
+ticker.tock()
 
 ticker.tick("Gensim Training ({} epochs)".format(args.EMBEDDING_EPOCHS))
 model.train(bigram[sentences], total_words=num_words, epochs=args.EMBEDDING_EPOCHS)

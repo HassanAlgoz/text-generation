@@ -6,6 +6,7 @@ import pickle
 import numpy as np
 from keras.preprocessing.text import text_to_word_sequence
 from keras.preprocessing.text import Tokenizer
+import os
 
 from helper import arabic_const
 import helper.paths as PATH
@@ -14,6 +15,11 @@ from helper.ticker import Ticker
 
 ticker = Ticker()
 ticker.tick()
+
+if not os.path.exists('processed'):
+    os.mkdir('processed', 0o777)
+if not os.path.exists('results'):
+    os.mkdir('results', 0o777)
 
 def filter_text(text):
     # replace english
